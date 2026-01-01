@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>AquaX OS</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Segoe UI",sans-serif;height:100vh;overflow:hidden;}
+
+/* ===== BOOT ===== */
+#boot{position:fixed;inset:0;background:radial-gradient(circle at top,#9fd6ff,#1c3a5a);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;z-index:9999;}
+#boot h1{font-size:48px;margin-bottom:20px;text-shadow:0 2px 6px rgba(0,0,0,.6);}
+.boot-bar{width:260px;height:14px;background:rgba(255,255,255,.3);border-radius:20px;overflow:hidden;}
+.boot-progress{height:100%;width:0%;background:linear-gradient(to right,#fff,#9fd6ff);animation:load 3s linear forwards;}
+@keyframes load{to{width:100%;}}
+
+/* ===== DESKTOP ===== */
+.desktop{width:100%;height:100%;background:radial-gradient(circle at top,#7fc8ff,#1f3c5d);position:relative;display:none;}
+
+/* ===== TASKBAR ===== */
+.taskbar{position:absolute;bottom:0;width:100%;height:56px;background:linear-gradient(#eeeeee,#bdbdbd);box-shadow:inset 0 1px 0 #fff,0 -3px 6px rgba(0,0,0,.4);display:flex;align-items:center;padding:0 12px;gap:12px;}
+.taskbar-left,.taskbar-center,.taskbar-right{display:flex;align-items:center;gap:12px;}
+.app-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(#fff,#ccc);box-shadow:inset 0 1px 0 #fff,0 3px 5px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;position:relative;transition:0.15s;}
+.app-icon span{position:absolute;bottom:-16px;font-size:10px;white-space:nowrap;text-align:center;width:100%;}
+.app-icon:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 #fff,0 6px 10px rgba(0,0,0,.4);}
+.app-icon:active{transform:translateY(0);box-shadow:inset 0 1px 0 #fff,0 2px 4px rgba(0,0,0,.4);}
+
+/* ===== WINDOWS ===== */
+.window{width:380px;position:absolute;top:80px;left:80px;background:linear-gradient(#f6f6f6,#d0d0d0);border-radius:14px;border:1px solid #777;box-shadow:inset 0 1px 0 #fff,0 15px 30px rgba(0,0,0,.45);display:none;}
+.titlebar{height:36px;background:linear-gradient(#ededed,#bcbcbc);border-bottom:1px solid #777;border-radius:14px 14px 0 0;display:flex;align-items:center;padding:0 10px;cursor:move;justify-content:space-between;}
+.win-buttons{display:flex;gap:6px;}
+.win-btn{width:12px;height:12px;border-radius:50%;cursor:pointer;transition:0.1s;}
+.close{background:#ff5f56;}
+.min{background:#ffbd2e;}
+.max{background:#27c93f;}
+.win-btn:hover{filter:brightness(1.2);}
+.win-btn:active{filter:brightness(0.9);}
+.content{padding:12px;}
+
+/* ===== APPS ===== */
+/* Notepad */
+.notepad{width:100%;height:220px;resize:none;font-family:"Courier New",monospace;}
+
+/* Calculator */
+.calc-display{width:100%;height:40px;font-size:20px;margin-bottom:6px;text-align:right;padding:4px;border-radius:6px;border:1px solid #aaa;background:linear-gradient(#fdfdfd,#ddd);}
+.calc-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.calc-buttons button{padding:12px;background:linear-gradient(#f0f0f0,#bbb);border:none;border-radius:8px;cursor:pointer;box-shadow:inset 0 2px 0 #fff,0 2px 4px rgba(0,0,0,.3);transition:0.1s;}
+.calc-buttons button:hover{background:linear-gradient(#fff,#ccc);}
+.calc-buttons button:active{background:linear-gradient(#ccc,#999);box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(0,0,0,.2);}
+
+/* Clicker */
+#clicker-counter{font-size:24px;text-align:center;margin:12px 0;}
+#clicker-btn{padding:12px 24px;font-size:18px;cursor:pointer;border-radius:8px;background:linear-gradient(#fff,#ccc);box-shadow:inset 0 2px 0 #fff,0 2px 4px rgba(0,0,0,.3);transition:0.1s;}
+#clicker-btn:hover{background:linear-gradient(#eee,#bbb);}
+#clicker-btn:active{background:linear-gradient(#ccc,#999);box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(0,0,0,.2);}
+
+/* Coin Game */
+#coingame-board{width:100%;height:200px;background:#ddd;position:relative;overflow:hidden;margin-top:12px;}
+.coin{width:30px;height:30px;background:gold;border-radius:50%;position:absolute;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.4);transition:0.1s;}
+.coin:active{transform:scale(0.9);}
+
+/* ===== START MENU ===== */
+#start-menu{position:absolute;bottom:56px;left:0;width:220px;background:linear-gradient(#fff,#ccc);border-radius:12px;padding:12px;display:none;box-shadow:0 10px 20px rgba(0,0,0,.3);}
+.start-app{padding:6px;cursor:pointer;border-radius:6px;margin-bottom:6px;background:linear-gradient(#eee,#ccc);transition:0.1s;}
+.start-app:hover{background:linear-gradient(#fff,#ddd);}
+.start-app:active{background:linear-gradient(#ccc,#aaa);}
+
+/* ===== SETTINGS ===== */
+.setting{background:linear-gradient(#fff,#ddd);padding:12px;border-radius:8px;margin-bottom:6px;}
+#wallpaper-select{width:100%;margin-top:6px;}
+#taskbar-color{width:100%;margin-top:6px;}
+#time-date-input{width:100%;margin-top:6px;font-size:14px;}
+#add-to-taskbar{margin-top:6px;padding:6px;width:100%;border-radius:6px;background:linear-gradient(#eee,#ccc);cursor:pointer;text-align:center;transition:0.1s;}
+#add-to-taskbar:hover{background:linear-gradient(#fff,#ddd);}
+#add-to-taskbar:active{background:linear-gradient(#ccc,#aaa);}
+</style>
+</head>
+<body>
+
+<!-- BOOT -->
+<div id="boot">
+    <h1>AquaX</h1>
+    <div class="boot-bar"><div class="boot-progress"></div></div>
+</div>
+
+<!-- DESKTOP -->
+<div class="desktop" id="desktop" style="display:none;"></div>
+
+<!-- WINDOWS -->
+<div class="window" id="notepad">
+  <div class="titlebar"><b>Блокнот</b><div class="win-buttons">
+      <div class="win-btn close" onclick="closeApp('notepad')"></div>
+      <div class="win-btn min" onclick="minimizeApp('notepad')"></div>
+      <div class="win-btn max" onclick="maximizeApp('notepad')"></div>
+  </div></div>
+  <div class="content"><textarea class="notepad"></textarea></div>
+</div>
+
+<div class="window" id="calculator">
+  <div class="titlebar"><b>Калькулятор</b><div class="win-buttons">
+      <div class="win-btn close" onclick="closeApp('calculator')"></div>
+      <div class="win-btn min" onclick="minimizeApp('calculator')"></div>
+      <div class="win-btn max" onclick="maximizeApp('calculator')"></div>
+  </div></div>
+  <div class="content">
+    <input type="text" id="calc-display" class="calc-display" readonly>
+    <div class="calc-buttons">
+      <button onclick="calcInput('7')">7</button><button onclick="calcInput('8')">8</button><button onclick="calcInput('9')">9</button><button onclick="calcInput('/')">/</button>
+      <button onclick="calcInput('4')">4</button><button onclick="calcInput('5')">5</button><button onclick="calcInput('6')">6</button><button onclick="calcInput('*')">*</button>
+      <button onclick="calcInput('1')">1</button><button onclick="calcInput('2')">2</button><button onclick="calcInput('3')">3</button><button onclick="calcInput('-')">-</button>
+      <button onclick="calcInput('0')">0</button><button onclick="calcInput('.')">.</button><button onclick="calcCalc()">=</button><button onclick="calcInput('+')">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="window" id="clicker">
+  <div class="titlebar"><b>Кликер</b><div class="win-buttons">
+      <div class="win-btn close" onclick="closeApp('clicker')"></div>
+      <div class="win-btn min" onclick="minimizeApp('clicker')"></div>
+      <div class="win-btn max" onclick="maximizeApp('clicker')"></div>
+  </div></div>
+  <div class="content">
+    <div id="clicker-counter">0</div>
+    <button id="clicker-btn" onclick="clicker()">Клик!</button>
+    <div style="margin-top:8px;">Прогресс: <span id="clicker-level">1</span></div>
+  </div>
+</div>
+
+<div class="window" id="coingame">
+  <div class="titlebar"><b>Лови монеты</b><div class="win-buttons">
+      <div class="win-btn close" onclick="closeApp('coingame')"></div>
+      <div class="win-btn min" onclick="minimizeApp('coingame')"></div>
+      <div class="win-btn max" onclick="maximizeApp('coingame')"></div>
+  </div></div>
+  <div class="content">
+    <div>Счёт: <span id="coingame-score">0</span> | Уровень: <span id="coingame-level">1</span></div>
+    <div id="coingame-board"></div>
+  </div>
+</div>
+
+<div class="window" id="browser">
+  <div class="titlebar"><b>Браузер</b><div class="win-buttons">
+      <div class="win-btn close" onclick="closeApp('browser')"></div>
+      <div class="win-btn min" onclick="minimizeApp('browser')"></div>
+      <div class="win-btn max" onclick="maximizeApp('browser')"></div>
+  </div></div>
+  <div class="content"><iframe src="https://example.com" style="width:100%;height:300px;border:none;"></iframe></div>
+</div>
+
+<div class="window" id="settings">
+  <div class="titlebar"><b>Настройки</b><div class="win-buttons">
+      <div class="win-btn close" onclick="closeApp('settings')"></div>
+      <div class="win-btn min" onclick="minimizeApp('settings')"></div>
+      <div class="win-btn max" onclick="maximizeApp('settings')"></div>
+  </div></div>
+  <div class="content">
+    <div class="setting"><label><input type="checkbox" id="soundToggle" checked> 🔊 Звуки системы</label></div>
+    <div class="setting"><label>Выбор обоев: <select id="wallpaper-select">
+      <option value="radial-gradient(circle at top,#7fc8ff,#1f3c5d)">Градиент 1</option>
+      <option value="radial-gradient(circle at top,#ff9f9f,#5a1c3a)">Градиент 2</option>
+      <option value="#88cc88">Зелёный</option>
+      <option value="#cc8888">Красный</option>
+    </select></label></div>
+    <div class="setting"><label>Цвет панели задач: <input type="color" id="taskbar-color" value="#eeeeee"></label></div>
+    <div class="setting"><label>Время и дата: <input type="datetime-local" id="time-date-input"></label></div>
+    <div id="add-to-taskbar" onclick="addAppToTaskbar()">➕ Добавить приложение на панель задач</div>
+  </div>
+</div>
+
+<div id="start-menu"><div class="start-app" onclick="openApp('notepad')">📝 Блокнот</div><div class="start-app" onclick="openApp('calculator')">🧮 Калькулятор</div><div class="start-app" onclick="openApp('clicker')">🎮 Кликер</div><div class="start-app" onclick="openApp('coingame')">💰 Лови монеты</div><div class="start-app" onclick="openApp('browser')">🌐 Браузер</div><div class="start-app" onclick="openApp('settings')">⚙️ Настройки</div></div>
+
+<div class="taskbar"><div class="taskbar-left"><div class="app-icon" onclick="toggleStartMenu()">☰<span>Пуск</span></div></div><div class="taskbar-center" id="taskbar"></div><div class="taskbar-right"><div id="clock-display"></div></div></div>
+
+<script>
+// ——— BOOT ———
+setTimeout(()=>{document.getElementById("boot").style.display="none";document.getElementById("desktop").style.display="block";},3200);
+
+// ——— SOUND ———
+const AudioCtx=new(window.AudioContext||window.webkitAudioContext)();let soundEnabled=true;document.getElementById("soundToggle").addEventListener("change",e=>soundEnabled=e.target.checked);
+function playSound(freq,d=0.08){if(!soundEnabled)return;const o=AudioCtx.createOscillator();const g=AudioCtx.createGain();o.frequency.value=freq;g.gain.value=0.05;o.connect(g);g.connect(AudioCtx.destination);o.start();o.stop(AudioCtx.currentTime+d);}
+function clickSound(){playSound(900,0.04);}function openSound(){playSound(600,0.12);}function closeSound(){playSound(300,0.12);}
+
+// ——— WINDOW ACTIONS ———
+function openApp(id){openSound();document.getElementById(id).style.display="block";}
+function closeApp(id){closeSound();document.getElementById(id).style.display="none";}
+function minimizeApp(id){document.getElementById(id).style.display="none";}
+function maximizeApp(id){const w=document.getElementById(id);if(w.style.width=="100%"){w.style.width="380px";w.style.height="auto";w.style.top="80px";w.style.left="80px";}else{w.style.width="100%";w.style.height="100%";w.style.top="0";w.style.left="0";}}
+
+// ——— DRAG WINDOWS ———
+document.querySelectorAll(".window").forEach(win=>{const bar=win.querySelector(".titlebar");let dx,dy,drag=false;bar.addEventListener("mousedown",e=>{drag=true;dx=e.clientX-win.offsetLeft;dy=e.clientY-win.offsetTop;});document.addEventListener("mousemove",e=>{if(!drag)return;win.style.left=e.clientX-dx+"px";win.style.top=e.clientY-dy+"px";});document.addEventListener("mouseup",()=>drag=false);});
+
+// ——— CLICK FEEDBACK ———
+document.addEventListener("click",clickSound);
+
+// ——— START MENU + TASKBAR ADD ———
+function toggleStartMenu(){const m=document.getElementById("start-menu");m.style.display=(m.style.display=="block")?"none":"block";}
+function addAppToTaskbar(){const id=prompt("Введите ID приложения (например 'notepad'):");if(!id||!document.getElementById(id))return;const bar=document.getElementById("taskbar");if([...bar.children].some(c=>c.dataset.app===id))return;const btn=document.createElement("div");btn.className="app-icon";btn.dataset.app=id;let ico="❓";if(id=="notepad")ico="📝";if(id=="calculator")ico="🧮";if(id=="clicker")ico="🎮";if(id=="coingame")ico="💰";if(id=="browser")ico="🌐";btn.innerHTML=ico+`<span>${id}</span>`;btn.onclick=()=>openApp(id);bar.appendChild(btn);}
+
+// ——— CALCULATOR ———
+let calcValue="";function calcInput(v){calcValue+=v;document.getElementById("calc-display").value=calcValue;}function calcCalc(){try{calcValue=eval(calcValue);document.getElementById("calc-display").value=calcValue;}catch(e){document.getElementById("calc-display").value="Ошибка";calcValue="";}}
+
+// ——— CLICKER ———
+let clickCount=0;let clickLevel=1;function clicker(){clickCount++;if(clickCount%10==0)clickLevel++;document.getElementById("clicker-counter").innerText=clickCount;document.getElementById("clicker-level").innerText=clickLevel;}
+
+// ——— COIN GAME ———
+let coinScore=0,coinLevel=1;
+function spawnCoin(){
+  const board=document.getElementById("coingame-board");
+  const coin = document.createElement("div");coin.className="coin";
+  const x=Math.random()*(board.clientWidth-30), y=Math.random()*(board.clientHeight-30);
+  coin.style.left=x+"px";coin.style.top=y+"px";
+  coin.onclick=()=>{coinScore++; updateCoin(); board.removeChild(coin); spawnCoin();}
+  board.appendChild(coin);
+}
+function updateCoin(){
+  document.getElementById("coingame-score").innerText=coinScore;
+  document.getElementById("coingame-level").innerText=coinLevel;
+  if(coinScore >= coinLevel*5){
+    coinScore=0;coinLevel++;
+    document.getElementById("coingame-board").innerHTML="";
+    for(let i=0;i<coinLevel;i++)spawnCoin();
+  }
+}
+spawnCoin();
+
+// ——— CLOCK & DATE ———
+function updateClock(){let now=new Date();const inp=document.getElementById("time-date-input");if(inp.value)now=new Date(inp.value);const h=now.getHours().toString().padStart(2,'0'),m=now.getMinutes().toString().padStart(2,'0');const d=now.getDate().toString().padStart(2,'0'),mo=(now.getMonth()+1).toString().padStart(2,'0'),y=now.getFullYear();document.getElementById("clock-display").innerText=`${h}:${m} ${d}.${mo}.${y}`;}
+setInterval(updateClock,1000);
+
+// ——— CUSTOMIZATION ———
+document.getElementById("wallpaper-select").addEventListener("change",e=>document.getElementById("desktop").style.background=e.target.value);
+document.getElementById("taskbar-color").addEventListener("input",e=>document.querySelector(".taskbar").style.background=e.target.value);
+</script>
+</body>
+</html>
+
+
